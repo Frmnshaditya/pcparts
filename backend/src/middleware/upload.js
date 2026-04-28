@@ -1,0 +1,46 @@
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// 🔥 PASTIKAN FOLDER ADA
+const uploadDir = 'uploads/';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// SET STORAGE
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = path.basename(file.originalname, ext)
+      .replace(/\s+/g, '-')
+      .toLowerCase();
+
+    const uniqueName = `${Date.now()}-${name}${ext}`;
+    cb(null, uniqueName);
+  },
+});
+
+// FILTER FILE
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file JPG, PNG, WEBP yang diperbolehkan'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // max 2MB
+  },
+});
+
+module.exports = upload;
